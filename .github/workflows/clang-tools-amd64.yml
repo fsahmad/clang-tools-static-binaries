@@ -41,7 +41,7 @@ jobs:
             extra-tar-args-cfe: '--exclude=cfe-${version}.src/test/Driver/Inputs/*'
     runs-on: ${{ matrix.runner }}
     env:
-      COMMON_CMAKE_ARGS: '-DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra"'
+      COMMON_CMAKE_ARGS: '-DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DLLVM_ENABLE_ZSTD=OFF -DLLVM_ENABLE_ZLIB=OFF'
       POSIX_CMAKE_ARGS: '-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_C_COMPILER=gcc-10'
       RELEASE: '${{ matrix.release }}'
       suffix: '${{ matrix.clang-version }}_${{ matrix.os }}-amd64'
