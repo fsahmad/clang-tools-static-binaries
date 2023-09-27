@@ -9,8 +9,8 @@ jobs:
   build:
     strategy:
       matrix:
-#        clang-version: [ 16, 17 ]
-#        os: [ linux, macosx, windows ]
+        # clang-version: [ 16, 17 ]
+        # os: [ linux, macosx, windows ]
         clang-version: [ 16 ]
         os: [ macosx ]
         include:
