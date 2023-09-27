@@ -9,8 +9,10 @@ jobs:
   build:
     strategy:
       matrix:
-        clang-version: [ 16, 17 ]
-        os: [ linux, macosx, windows ]
+#        clang-version: [ 16, 17 ]
+#        os: [ linux, macosx, windows ]
+        clang-version: [ 16 ]
+        os: [ macosx ]
         include:
           - clang-version: 16
             release: llvm-project-16.0.4.src
