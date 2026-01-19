@@ -100,7 +100,7 @@ jobs:
             bindir: '/build/MinSizeRel/bin'
             dotexe: '.exe'
             shacmd: 'sha512sum.exe'
-            extra-tar-args: '--exclude=${RELEASE}/clang/test/Driver/Inputs/* --exclude=${RELEASE}/libcxx/test/std/input.output/filesystems/Inputs/static_test_env/* --exclude=${RELEASE}/libclc/amdgcn-mesa3d'
+            extra-tar-args: '--exclude=${RELEASE}/llvm/utils/mlgo-utils/* --exclude=${RELEASE}/clang/test/Driver/Inputs/* --exclude=${RELEASE}/libcxx/test/std/input.output/filesystems/Inputs/static_test_env/* --exclude=${RELEASE}/libclc/amdgcn-mesa3d'
             extra-tar-args-cfe: '--exclude=cfe-${version}.src/test/Driver/Inputs/*'
             arch: 'amd64'
         exclude:
