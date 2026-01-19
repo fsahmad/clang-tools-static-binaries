@@ -212,13 +212,13 @@ jobs:
             runner: ubuntu-22.04
             arch: 'amd64'
           - os: macosx
-            runner: macos-13 # Intel macOS runner test
+            runner: macos-15-intel # Intel macOS runner test
             arch: 'amd64'
           - os: windows
             runner: windows-latest
             arch: 'amd64'
           - os: macos-arm
-            runner: macos-14 # Apple silicon macOS runner test
+            runner: macos-15 # Apple silicon macOS runner test
             arch: 'arm64'
     runs-on: ${{ matrix.runner }}
     needs: build
