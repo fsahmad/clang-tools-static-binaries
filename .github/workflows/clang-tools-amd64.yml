@@ -181,6 +181,19 @@ jobs:
       run: |
         cd ${{ matrix.release }}${{ matrix.bindir }}
         clang-format${{ matrix.dotexe }} --version
+    - name: create zip with clean binary name
+      shell: bash
+      run: |
+        cd ${{ matrix.release }}${{ matrix.bindir }}
+
+        # Create zip file with clean binary name inside
+        if [ "${{ matrix.os }}" = "windows" ]; then
+          # Windows: use PowerShell Compress-Archive for better compatibility
+          powershell -Command "Compress-Archive -Path 'clang-format${{ matrix.dotexe }}' -DestinationPath 'clang-format-${{ env.suffix }}.zip'"
+        else
+          # Unix: use zip command
+          zip ${{ env.suffix }}.zip clang-format${{ matrix.dotexe }}
+        fi
     - name: rename output binary
       run: |
         cd ${{ matrix.release }}${{ matrix.bindir }}
@@ -197,6 +210,12 @@ jobs:
       with:
         name: clang-tools-${{ matrix.release }}-${{ env.suffix }}
         path: "${{ matrix.release }}${{ matrix.bindir }}/clang-*-${{ env.suffix }}*"
+        retention-days: 1
+    - name: upload zip artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: clang-format-zip-${{ matrix.release }}-${{ env.suffix }}
+        path: "${{ matrix.release }}${{ matrix.bindir }}/${{ env.suffix }}.zip"
         retention-days: 1
   test-release:
     concurrency:
@@ -229,7 +248,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '**/*${{ env.suffix }}'
+          pattern: '**/clang-tools*${{ env.suffix }}'
       - name: list files (macos, linux)
         if: ${{ matrix.os == 'macosx' || matrix.os == 'linux' || matrix.os == 'macos-arm' }}
         run: ls -laR artifacts/
