@@ -1,6 +1,7 @@
 name: clang-tools-static-amd64
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
   pull_request:
@@ -15,7 +16,7 @@ jobs:
       cancel-in-progress: true
     strategy:
       matrix:
-        clang-version: [ 12, 12.0.1, 13, 14, 15, 16, 17, 18, 19, 20 ]
+        clang-version: [ 20, 21 ]
         os: [ linux, macosx, macos-arm, windows ]
         include:
           # Temporarily disabled versions for testing
@@ -63,6 +64,8 @@ jobs:
             release: llvm-project-19.1.0.src
           - clang-version: 20
             release: llvm-project-20.1.0.src
+          - clang-version: 21
+            release: llvm-project-21.1.0.src
           - os: linux
             runner: ubuntu-22.04
             os-cmake-args: '-DLLVM_BUILD_STATIC=ON -DCMAKE_CXX_FLAGS="-s -flto" ${POSIX_CMAKE_ARGS} ${LINUX_CMAKE_ARGS}'
@@ -109,10 +112,10 @@ jobs:
             os: macos-arm
     runs-on: ${{ matrix.runner }}
     env:
-      COMMON_CMAKE_ARGS: '-DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra"'
+      COMMON_CMAKE_ARGS: '-DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DLLVM_ENABLE_ZSTD=OFF -DLLVM_ENABLE_ZLIB=OFF'
       LINUX_CMAKE_ARGS: '-DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_C_COMPILER=gcc-10'
-      MACOS_CMAKE_ARGS: '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_C_COMPILER=gcc-14 -DLLVM_ENABLE_ZSTD=OFF -DLLVM_ENABLE_ZLIB=OFF'
-      POSIX_CMAKE_ARGS: '-DCMAKE_BUILD_TYPE=MinSizeRel'
+      MACOS_CMAKE_ARGS: '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_C_COMPILER=gcc-14'
+      POSIX_CMAKE_ARGS: '-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_C_COMPILER=gcc-10'
       RELEASE: '${{ matrix.release }}'
       suffix: '${{ matrix.clang-version }}_${{ matrix.os }}-${{ matrix.arch }}'
     steps:
@@ -126,47 +129,14 @@ jobs:
       shell: bash
       run: curl -L https://github.com/${{ github.repository }}/archive/${{ github.ref }}.tar.gz | tar xvz --strip 1
     - name: get llvm-project
-      if: ${{ matrix.clang-version < 7 }}
-      shell: bash
-      run: |
-        version=${RELEASE##llvm-project-}
-        curl -LO https://releases.llvm.org/${version}/llvm-${version}.src.tar.xz
-        curl -LO https://releases.llvm.org/${version}/cfe-${version}.src.tar.xz
-        curl -LO https://releases.llvm.org/${version}/clang-tools-extra-${version}.src.tar.xz
-    - name: get llvm-project
-      if: ${{ matrix.clang-version == 7 || matrix.clang-version == 8 }}
-      shell: bash
-      run: |
-        version=${RELEASE##llvm-project-}
-        curl -LO https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-${version}.src.tar.xz
-        curl -LO https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/cfe-${version}.src.tar.xz
-        curl -LO https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/clang-tools-extra-${version}.src.tar.xz
-    - name: get llvm-project
-      if: ${{ matrix.clang-version >= 9 || matrix.clang-version == '12.0.1' }}
+      if: ${{ matrix.clang-version >= 9 }}
       shell: bash
       run: |
         version=${RELEASE##llvm-project-}; version=${version%.src}
         curl -LO https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/${{ matrix.release }}.tar.xz
 
     - name: unpack llvm-project
-      if: ${{ matrix.clang-version < 9 }}
-      shell: bash
-      run: |
-        version=${RELEASE##llvm-project-}
-        tar xf llvm-${version}.src.tar.xz
-        tar xf cfe-${version}.src.tar.xz ${{ matrix.extra-tar-args-cfe }}
-        tar xf clang-tools-extra-${version}.src.tar.xz
-        mkdir ${{ matrix.release }}
-        mv llvm-${version}.src ${{ matrix.release }}/llvm
-        mv cfe-${version}.src ${{ matrix.release }}/clang
-        mv clang-tools-extra-${version}.src ${{ matrix.release }}/clang-tools-extra
-    - name: move clang 3.9 sources
-      if: ${{ matrix.clang-version == 3.9 }}
-      run: |
-        mv ${{ matrix.release }}/clang ${{ matrix.release }}/llvm/tools/clang
-        mv ${{ matrix.release }}/clang-tools-extra ${{ matrix.release }}/llvm/tools/clang/tools/extra
-    - name: unpack llvm-project
-      if: ${{ matrix.clang-version >= 9 || matrix.clang-version == '12.0.1' }}
+      if: ${{ matrix.clang-version >= 9 }}
       shell: bash
       run: |
         tar xf ${{ matrix.release }}.tar.xz ${{ matrix.extra-tar-args }}
@@ -198,7 +168,7 @@ jobs:
     - name: cmake
       run: cmake -S ${{ matrix.release }}/llvm -B ${{ matrix.release }}/build ${{ env.COMMON_CMAKE_ARGS }} ${{ matrix.os-cmake-args }} ${{ matrix.extra-cmake-args }}
     - name: build
-      run: cmake --build ${{ matrix.release }}/build ${{ matrix.build-args }} --target clang-format clang-query clang-tidy clang-apply-replacements
+      run: cmake --build ${{ matrix.release }}/build ${{ matrix.build-args }} --target clang-format
     - name: print dependencies
       if: ${{ matrix.os == 'macosx' || matrix.os == 'macos-arm' }}
       run: otool -L ${{ matrix.release }}/build/bin/clang-format
@@ -222,22 +192,13 @@ jobs:
       run: |
         cd ${{ matrix.release }}${{ matrix.bindir }}
         mv clang-format${{ matrix.dotexe }} clang-format-${{ env.suffix }}${{ matrix.dotexe }}
-        mv clang-query${{ matrix.dotexe }} clang-query-${{ env.suffix }}${{ matrix.dotexe }}
-        mv clang-tidy${{ matrix.dotexe }} clang-tidy-${{ env.suffix }}${{ matrix.dotexe }}
-        mv clang-apply-replacements${{ matrix.dotexe }} clang-apply-replacements-${{ env.suffix }}${{ matrix.dotexe }}
     - name: create and print sha512sum
       shell: bash
       run: |
         cd ${{ matrix.release }}${{ matrix.bindir }}
         ${{ matrix.shacmd }} clang-format-${{ env.suffix }} > clang-format-${{ env.suffix }}.sha512sum
-        ${{ matrix.shacmd }} clang-query-${{ env.suffix }} > clang-query-${{ env.suffix }}.sha512sum
-        ${{ matrix.shacmd }} clang-tidy-${{ env.suffix }} > clang-tidy-${{ env.suffix }}.sha512sum
-        ${{ matrix.shacmd }} clang-apply-replacements-${{ env.suffix }} > clang-apply-replacements-${{ env.suffix }}.sha512sum
         echo "Checksums are: "
         cat clang-format-${{ env.suffix }}.sha512sum
-        cat clang-query-${{ env.suffix }}.sha512sum
-        cat clang-tidy-${{ env.suffix }}.sha512sum
-        cat clang-apply-replacements-${{ env.suffix }}.sha512sum
     - name: upload artifacts
       uses: actions/upload-artifact@v4
       with:
