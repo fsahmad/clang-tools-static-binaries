@@ -43,24 +43,24 @@ jobs:
           # - clang-version: 11
           #   release: llvm-project-11.1.0.src
           # NOTE: Version 11 also fails with CMake 4 compatibility issues
-          - clang-version: 12
-            release: llvm-project-12.0.0.src
-          - clang-version: 12.0.1
-            release: llvm-project-12.0.1.src
-          - clang-version: 13
-            release: llvm-project-13.0.0.src
-          - clang-version: 14
-            release: llvm-project-14.0.0.src
-          - clang-version: 15
-            release: llvm-project-15.0.2.src
-          - clang-version: 16
-            release: llvm-project-16.0.3.src
-          - clang-version: 17
-            release: llvm-project-17.0.4.src
-          - clang-version: 18
-            release: llvm-project-18.1.8.src
-          - clang-version: 19
-            release: llvm-project-19.1.0.src
+        #   - clang-version: 12
+        #     release: llvm-project-12.0.0.src
+        #   - clang-version: 12.0.1
+        #     release: llvm-project-12.0.1.src
+        #   - clang-version: 13
+        #     release: llvm-project-13.0.0.src
+        #   - clang-version: 14
+        #     release: llvm-project-14.0.0.src
+        #   - clang-version: 15
+        #     release: llvm-project-15.0.2.src
+        #   - clang-version: 16
+        #     release: llvm-project-16.0.3.src
+        #   - clang-version: 17
+        #     release: llvm-project-17.0.4.src
+        #   - clang-version: 18
+        #     release: llvm-project-18.1.8.src
+        #   - clang-version: 19
+        #     release: llvm-project-19.1.0.src
           - clang-version: 20
             release: llvm-project-20.1.0.src
           - clang-version: 21
