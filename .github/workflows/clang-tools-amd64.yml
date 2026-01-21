@@ -188,6 +188,15 @@ jobs:
         ${{ matrix.shacmd }} clang-format > clang-format-${{ env.suffix }}.sha512sum
         echo "Checksums are: "
         cat clang-format-${{ env.suffix }}.sha512sum
+    - name: create zip archive
+      shell: bash
+      run: |
+        cd ${{ matrix.release }}${{ matrix.bindir }}
+        if [[ "${{ matrix.os }}" == "windows" ]]; then
+          7z a clang-format-${{ env.suffix }}.zip clang-format${{ matrix.dotexe }}
+        else
+          zip clang-format-${{ env.suffix }}.zip clang-format${{ matrix.dotexe }}
+        fi
     - name: upload sha512sum artifact
       uses: actions/upload-artifact@v4
       with:
@@ -198,7 +207,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: clang-format-${{ matrix.release }}-${{ env.suffix }}
-        path: "${{ matrix.release }}${{ matrix.bindir }}/clang-format${{ matrix.dotexe }}"
+        path: "${{ matrix.release }}${{ matrix.bindir }}/clang-format-${{ env.suffix }}.zip"
         retention-days: 1
   test-release:
     concurrency:
@@ -232,6 +241,15 @@ jobs:
         with:
           path: artifacts
           pattern: 'clang-format-*${{ env.suffix }}'
+      - name: unzip artifacts
+        shell: bash
+        run: |
+            cd artifacts
+            for zipfile in $(find . -type f -name "*.zip"); do
+            echo "Unzipping $zipfile"
+            unzip -o "$zipfile" -d "$(dirname "$zipfile")"
+            rm "$zipfile"
+            done
       - name: list files (macos, linux)
         if: ${{ matrix.os == 'macosx' || matrix.os == 'linux' || matrix.os == 'macos-arm' }}
         run: ls -laR artifacts/
